@@ -115,7 +115,6 @@ app.delete("/api/users/:id", async (req, res) => {
   }
 });
 
-
 app.get("/api/team", async (req, res) => {
   try {
     const teams = await Team.find().populate(
@@ -128,36 +127,24 @@ app.get("/api/team", async (req, res) => {
   }
 });
 
+// ... (your existing code)
 
 app.post("/api/team", async (req, res) => {
-  const { teamName, selectedUsers } = req.body;
-
-  console.log("Received data for creating team:", teamName, selectedUsers);
-
-  if (!teamName) {
-    return res.status(400).json({ message: "Team name is required." });
-  }
-
   try {
-    const uniqueDomains = new Set();
-    const users = await User.find({ _id: { $in: selectedUsers } });
+    const { teamName, selectedUsers } = req.body;
 
-    for (const user of users) {
-      if (uniqueDomains.has(user.domain)) {
-        return res
-          .status(400)
-          .json({ message: "Each user must have a unique domain." });
-      }
-      uniqueDomains.add(user.domain);
+    console.log("Received data for creating team:", teamName, selectedUsers);
 
-      Example: if (!user.available) {
-        return res
-          .status(400)
-          .json({ message: "All users must be available." });
-      }
+    if (!teamName) {
+      return res.status(400).json({ error: "Team name is required." });
     }
 
+    const uniqueDomains = new Set();
+
+    // No need to check user availability in this modified code
+
     const team = await Team.create({ name: teamName, users: selectedUsers });
+
     console.log("Team created:", team);
 
     const populatedTeam = await Team.findById(team._id).populate(
@@ -168,9 +155,15 @@ app.post("/api/team", async (req, res) => {
     res.status(201).json(populatedTeam);
   } catch (error) {
     console.error("Error creating team:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      error: "Error creating team. Please try again.",
+      details: error.message,
+    });
   }
 });
+
+
+// ... (your existing code)
 
 app.delete("/api/team/:id", async (req, res) => {
   try {
@@ -184,7 +177,6 @@ app.delete("/api/team/:id", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
 
 app.get("/api/team/:id", async (req, res) => {
   try {
